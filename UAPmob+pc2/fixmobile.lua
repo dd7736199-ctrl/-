@@ -1,7 +1,6 @@
 -- ✅ Universal Admin Panel  (PC + Mobile)
 -- Автор: @Wyoleu
 
-
 local player = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -13,15 +12,18 @@ local function tween(obj, props, time)
 end
 
 -- === ЗАСТАВКА ===
-local splash = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local splash = Instance.new("ScreenGui")
+splash.Parent = player:WaitForChild("PlayerGui")
 splash.IgnoreGuiInset = true
 splash.ResetOnSpawn = false
 
-local splashFrame = Instance.new("Frame", splash)
+local splashFrame = Instance.new("Frame")
+splashFrame.Parent = splash
 splashFrame.Size = UDim2.new(1, 0, 1, 0)
 splashFrame.BackgroundColor3 = Color3.new(0, 0, 0)
 
-local splashText = Instance.new("TextLabel", splashFrame)
+local splashText = Instance.new("TextLabel")
+splashText.Parent = splashFrame
 splashText.Size = UDim2.new(1, 0, 1, 0)
 splashText.Text = "Universal Admin Panel by @Wyoleu\nУспешно запущена!"
 splashText.TextColor3 = Color3.new(1, 1, 1)
@@ -29,7 +31,8 @@ splashText.Font = Enum.Font.GothamBold
 splashText.TextScaled = true
 splashText.BackgroundTransparency = 1
 
-local sound = Instance.new("Sound", splashFrame)
+local sound = Instance.new("Sound")
+sound.Parent = splashFrame
 sound.SoundId = "rbxassetid://9120846534"
 sound.Volume = 2
 sound:Play()
@@ -47,13 +50,15 @@ local bodyGyro, bodyVelocity
 local moveDir = Vector3.zero
 
 -- === GUI ===
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local gui = Instance.new("ScreenGui")
+gui.Parent = player:WaitForChild("PlayerGui")
 gui.Name = "UniversalAdminPanel"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 -- Главная кнопка
-local mainButton = Instance.new("TextButton", gui)
+local mainButton = Instance.new("TextButton")
+mainButton.Parent = gui
 mainButton.Size = UDim2.new(0, 280, 0, 50)
 mainButton.Position = UDim2.new(0.05, 0, 0.25, 0)
 mainButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -61,34 +66,35 @@ mainButton.TextColor3 = Color3.new(1, 1, 1)
 mainButton.Font = Enum.Font.GothamBold
 mainButton.TextSize = 18
 mainButton.Text = "📂 Universal Admin Panel"
-mainButton.Active = true
-mainButton.Draggable = true
-Instance.new("UICorner", mainButton)
+-- mainButton.Draggable = true -- убрано, устарело
+Instance.new("UICorner").Parent = mainButton
 
 -- Панель
-local panel = Instance.new("Frame", gui)
+local panel = Instance.new("Frame")
+panel.Parent = gui
 panel.Size = UDim2.new(0, 280, 0, 0)
 panel.Position = UDim2.new(0.05, 0, 0.25, 60)
 panel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 panel.Visible = false
-panel.Active = true
-panel.Draggable = true
-Instance.new("UICorner", panel)
+Instance.new("UICorner").Parent = panel
 
 -- === МОБИЛЬНЫЙ ДЖОЙСТИК ===
-local joystickGui = Instance.new("Frame", gui)
+local joystickGui = Instance.new("Frame")
+joystickGui.Parent = gui
 joystickGui.Size = UDim2.new(0, 120, 0, 120)
 joystickGui.Position = UDim2.new(0.05, 0, 0.7, 0)
 joystickGui.BackgroundTransparency = 1
 joystickGui.Visible = UserInputService.TouchEnabled
 
-local outer = Instance.new("ImageLabel", joystickGui)
+local outer = Instance.new("ImageLabel")
+outer.Parent = joystickGui
 outer.Size = UDim2.new(0, 120, 0, 120)
 outer.Image = "rbxassetid://5108535320"
 outer.ImageTransparency = 0.3
 outer.BackgroundTransparency = 1
 
-local inner = Instance.new("ImageLabel", outer)
+local inner = Instance.new("ImageLabel")
+inner.Parent = outer
 inner.Size = UDim2.new(0, 40, 0, 40)
 inner.Position = UDim2.new(0.5, -20, 0.5, -20)
 inner.Image = "rbxassetid://5108534567"
@@ -114,17 +120,20 @@ UserInputService.TouchMoved:Connect(function(input)
 	if dragging and input == touchInput then
 		local center = outer.AbsolutePosition + outer.AbsoluteSize / 2
 		local dir = Vector2.new(input.Position.X - center.X, input.Position.Y - center.Y)
-		local dist = math.min(dir.Magnitude, 40)
-		dir = dir.Unit * dist
-		inner.Position = UDim2.new(0.5, dir.X - 20, 0.5, dir.Y - 20)
-		moveDir = Vector3.new(dir.X / 40, 0, dir.Y / 40)
+		if dir.Magnitude > 0 then
+			local dist = math.min(dir.Magnitude, 40)
+			dir = dir.Unit * dist
+			inner.Position = UDim2.new(0.5, dir.X - 20, 0.5, dir.Y - 20)
+			moveDir = Vector3.new(dir.X / 40, 0, -dir.Y / 40) -- ✅ инвертирована ось Y
+		end
 	end
 end)
 
 -- === КНОПКИ ===
 local buttons = {}
 local function newButton(text, order, func)
-	local btn = Instance.new("TextButton", panel)
+	local btn = Instance.new("TextButton")
+	btn.Parent = panel
 	btn.Size = UDim2.new(1, -20, 0, 40)
 	btn.Position = UDim2.new(0, 10, 0, 10 + (order - 1) * 45)
 	btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
@@ -132,15 +141,17 @@ local function newButton(text, order, func)
 	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 16
 	btn.Text = text
-	btn.AutoButtonColor = true
-	Instance.new("UICorner", btn)
-	local ind = Instance.new("TextLabel", btn)
+	Instance.new("UICorner").Parent = btn
+
+	local ind = Instance.new("TextLabel")
+	ind.Parent = btn
 	ind.Size = UDim2.new(0, 60, 1, 0)
 	ind.Position = UDim2.new(1, -70, 0, 0)
 	ind.BackgroundTransparency = 1
 	ind.Text = "OFF"
 	ind.TextColor3 = Color3.fromRGB(255, 50, 50)
 	ind.Font = Enum.Font.GothamBold
+
 	btn.MouseButton1Click:Connect(func)
 	buttons[text] = ind
 	return btn
@@ -162,9 +173,11 @@ local function toggleFly()
 	flying = not flying
 	toggleIndicator("Fly", flying)
 	if flying then
-		bodyGyro = Instance.new("BodyGyro", root)
+		bodyGyro = Instance.new("BodyGyro")
+		bodyGyro.Parent = root
 		bodyGyro.MaxTorque = Vector3.new(400000,400000,400000)
-		bodyVelocity = Instance.new("BodyVelocity", root)
+		bodyVelocity = Instance.new("BodyVelocity")
+		bodyVelocity.Parent = root
 		bodyVelocity.MaxForce = Vector3.new(400000,400000,400000)
 	else
 		if bodyGyro then bodyGyro:Destroy() end
@@ -185,7 +198,6 @@ local function flightController()
 		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
 		if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move -= Vector3.new(0,1,0) end
 	else
-		-- ✅ Исправлено направление джойстика
 		local dir = moveDir
 		move = (cam.CFrame.RightVector * dir.X) + (cam.CFrame.LookVector * dir.Z)
 	end
@@ -220,18 +232,21 @@ local function toggleESP()
 			local highlight = char:FindFirstChild("ESPHighlight")
 			if espEnabled then
 				if not highlight then
-					highlight = Instance.new("Highlight", char)
+					highlight = Instance.new("Highlight")
+					highlight.Parent = char
 					highlight.Name = "ESPHighlight"
 					highlight.FillTransparency = 1
 					highlight.OutlineColor = Color3.fromRGB(255,0,0)
 					highlight.OutlineTransparency = 0
 					local head = char:FindFirstChild("Head")
 					if head and not head:FindFirstChild("ESPName") then
-						local tag = Instance.new("BillboardGui", head)
+						local tag = Instance.new("BillboardGui")
+						tag.Parent = head
 						tag.Name = "ESPName"
 						tag.Size = UDim2.new(0,100,0,20)
 						tag.AlwaysOnTop = true
-						local lbl = Instance.new("TextLabel", tag)
+						local lbl = Instance.new("TextLabel")
+						lbl.Parent = tag
 						lbl.Size = UDim2.new(1,0,1,0)
 						lbl.BackgroundTransparency = 1
 						lbl.TextColor3 = Color3.new(1,0,0)
@@ -249,15 +264,17 @@ local function toggleESP()
 end
 
 -- === GOTO ===
-local gotoPopup = Instance.new("Frame", panel)
+local gotoPopup = Instance.new("Frame")
+gotoPopup.Parent = panel
 gotoPopup.Size = UDim2.new(0, 200, 0, 100)
 gotoPopup.Position = UDim2.new(0.5, -100, 0.5, -50)
 gotoPopup.BackgroundColor3 = Color3.fromRGB(40,40,40)
 gotoPopup.Visible = false
 gotoPopup.ZIndex = 5
-Instance.new("UICorner", gotoPopup)
+Instance.new("UICorner").Parent = gotoPopup
 
-local nameBox = Instance.new("TextBox", gotoPopup)
+local nameBox = Instance.new("TextBox")
+nameBox.Parent = gotoPopup
 nameBox.Size = UDim2.new(0.9, 0, 0, 35)
 nameBox.Position = UDim2.new(0.05, 0, 0.1, 0)
 nameBox.PlaceholderText = "Введите ник"
@@ -265,16 +282,17 @@ nameBox.Font = Enum.Font.GothamBold
 nameBox.TextSize = 16
 nameBox.TextColor3 = Color3.new(1,1,1)
 nameBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
-Instance.new("UICorner", nameBox)
+Instance.new("UICorner").Parent = nameBox
 
-local goBtn = Instance.new("TextButton", gotoPopup)
+local goBtn = Instance.new("TextButton")
+goBtn.Parent = gotoPopup
 goBtn.Size = UDim2.new(0.9, 0, 0, 35)
 goBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
 goBtn.Text = "Teleport"
 goBtn.Font = Enum.Font.GothamBold
 goBtn.TextColor3 = Color3.new(1,1,1)
 goBtn.BackgroundColor3 = Color3.fromRGB(80,80,80)
-Instance.new("UICorner", goBtn)
+Instance.new("UICorner").Parent = goBtn
 
 goBtn.MouseButton1Click:Connect(function()
 	local targetName = nameBox.Text
@@ -314,9 +332,10 @@ end)
 -- === ОСНОВНОЙ ЦИКЛ ===
 RunService.Heartbeat:Connect(function()
 	if spinEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-		player.Character.HumanoidRootPart.CFrame *= CFrame.Angles(0, math.rad(spinSpeed), 0)
+		local root = player.Character.HumanoidRootPart
+		root.CFrame = root.CFrame * CFrame.Angles(0, math.rad(spinSpeed), 0)
 	end
 	flightController()
 end)
 
-print("✅ Universal Admin Panel by @wyoleu запущен успешно (PC + Mobile)")
+print("✅ Universal Admin Panel by @Wyoleu запущен успешно (PC + Mobile)")
