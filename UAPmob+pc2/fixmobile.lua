@@ -1,6 +1,6 @@
--- ✅ Universal Admin Panel v19 (PC + Mobile)
+-- ✅ Universal Admin Panel  (PC + Mobile)
 -- Автор: @Wyoleu
--- Работает из StarterPlayerScripts
+
 
 local player = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
@@ -185,4 +185,138 @@ local function flightController()
 		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
 		if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move -= Vector3.new(0,1,0) end
 	else
-		-- ✅ Исправлен
+		-- ✅ Исправлено направление джойстика
+		local dir = moveDir
+		move = (cam.CFrame.RightVector * dir.X) + (cam.CFrame.LookVector * dir.Z)
+	end
+
+	bodyVelocity.Velocity = move.Magnitude > 0 and move.Unit * flightSpeed or Vector3.zero
+end
+
+local function toggleNoClip()
+	noclip = not noclip
+	toggleIndicator("Noclip", noclip)
+end
+
+RunService.Stepped:Connect(function()
+	if noclip and player.Character then
+		for _, part in ipairs(player.Character:GetDescendants()) do
+			if part:IsA("BasePart") then part.CanCollide = false end
+		end
+	end
+end)
+
+local function toggleSpin()
+	spinEnabled = not spinEnabled
+	toggleIndicator("Spin", spinEnabled)
+end
+
+local function toggleESP()
+	espEnabled = not espEnabled
+	toggleIndicator("ESP (Wallhack)", espEnabled)
+	for _, p in ipairs(game.Players:GetPlayers()) do
+		if p ~= player and p.Character then
+			local char = p.Character
+			local highlight = char:FindFirstChild("ESPHighlight")
+			if espEnabled then
+				if not highlight then
+					highlight = Instance.new("Highlight", char)
+					highlight.Name = "ESPHighlight"
+					highlight.FillTransparency = 1
+					highlight.OutlineColor = Color3.fromRGB(255,0,0)
+					highlight.OutlineTransparency = 0
+					local head = char:FindFirstChild("Head")
+					if head and not head:FindFirstChild("ESPName") then
+						local tag = Instance.new("BillboardGui", head)
+						tag.Name = "ESPName"
+						tag.Size = UDim2.new(0,100,0,20)
+						tag.AlwaysOnTop = true
+						local lbl = Instance.new("TextLabel", tag)
+						lbl.Size = UDim2.new(1,0,1,0)
+						lbl.BackgroundTransparency = 1
+						lbl.TextColor3 = Color3.new(1,0,0)
+						lbl.Font = Enum.Font.GothamBold
+						lbl.Text = p.Name
+					end
+				end
+			else
+				if highlight then highlight:Destroy() end
+				local head = char:FindFirstChild("Head")
+				if head and head:FindFirstChild("ESPName") then head.ESPName:Destroy() end
+			end
+		end
+	end
+end
+
+-- === GOTO ===
+local gotoPopup = Instance.new("Frame", panel)
+gotoPopup.Size = UDim2.new(0, 200, 0, 100)
+gotoPopup.Position = UDim2.new(0.5, -100, 0.5, -50)
+gotoPopup.BackgroundColor3 = Color3.fromRGB(40,40,40)
+gotoPopup.Visible = false
+gotoPopup.ZIndex = 5
+Instance.new("UICorner", gotoPopup)
+
+local nameBox = Instance.new("TextBox", gotoPopup)
+nameBox.Size = UDim2.new(0.9, 0, 0, 35)
+nameBox.Position = UDim2.new(0.05, 0, 0.1, 0)
+nameBox.PlaceholderText = "Введите ник"
+nameBox.Font = Enum.Font.GothamBold
+nameBox.TextSize = 16
+nameBox.TextColor3 = Color3.new(1,1,1)
+nameBox.BackgroundColor3 = Color3.fromRGB(60,60,60)
+Instance.new("UICorner", nameBox)
+
+local goBtn = Instance.new("TextButton", gotoPopup)
+goBtn.Size = UDim2.new(0.9, 0, 0, 35)
+goBtn.Position = UDim2.new(0.05, 0, 0.55, 0)
+goBtn.Text = "Teleport"
+goBtn.Font = Enum.Font.GothamBold
+goBtn.TextColor3 = Color3.new(1,1,1)
+goBtn.BackgroundColor3 = Color3.fromRGB(80,80,80)
+Instance.new("UICorner", goBtn)
+
+goBtn.MouseButton1Click:Connect(function()
+	local targetName = nameBox.Text
+	for _, p in ipairs(game.Players:GetPlayers()) do
+		if string.lower(p.Name) == string.lower(targetName) and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+			player.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+		end
+	end
+	gotoPopup.Visible = false
+end)
+
+-- === КНОПКИ ===
+newButton("1. Fly", 1, toggleFly)
+newButton("2. Noclip", 2, toggleNoClip)
+newButton("3. Spin", 3, toggleSpin)
+newButton("4. Spin +", 4, function() spinSpeed += 2 end)
+newButton("5. Spin -", 5, function() spinSpeed = math.max(0, spinSpeed - 2) end)
+newButton("6. ESP (Wallhack)", 6, toggleESP)
+newButton("7. Fly Speed+", 7, function() flightSpeed += 10 end)
+newButton("8. Fly Speed-", 8, function() flightSpeed = math.max(10, flightSpeed - 10) end)
+newButton("9. Goto", 9, function() gotoPopup.Visible = not gotoPopup.Visible end)
+newButton("10. Exit", 10, function() gui:Destroy() end)
+
+-- === ПАНЕЛЬ ОТКРЫТИЕ ===
+mainButton.MouseButton1Click:Connect(function()
+	if panel.Visible then
+		tween(panel, {Size = UDim2.new(0,280,0,0)}, 0.3)
+		task.wait(0.3)
+		panel.Visible = false
+	else
+		panel.Visible = true
+		panel.Size = UDim2.new(0,280,0,0)
+		tween(panel, {Size = UDim2.new(0,280,0,480)}, 0.3)
+	end
+end)
+
+-- === ОСНОВНОЙ ЦИКЛ ===
+RunService.Heartbeat:Connect(function()
+	if spinEnabled and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		player.Character.HumanoidRootPart.CFrame *= CFrame.Angles(0, math.rad(spinSpeed), 0)
+	end
+	flightController()
+end)
+
+print("✅ Universal Admin Panel by @wyoleu запущен успешно (PC + Mobile)")
